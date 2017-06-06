@@ -139,7 +139,7 @@ def uncertainty_sampling_bagofword(filena):
 
 
 
-		bigram_vectorizer = CountVectorizer(ngram_range=(1,3), token_pattern=r'\b\w+\b', min_df=1);
+		bigram_vectorizer = CountVectorizer(ngram_range=(1,3), token_pattern=r"\b[a-zA-Z]\w+\b[-]*\w*\b\b", min_df=1);
 		lr = linear_model.LogisticRegression()
 		for j in range(9):
 			X = bigram_vectorizer.fit_transform(corpus_train).toarray();
@@ -178,9 +178,15 @@ def uncertainty_sampling_bagofword(filena):
 			# tmp = list(reversed(tmp));
 			# for i in range(10):
 			# 	featurelist.append(bigram_vectorizer.get_feature_names()[i]);
-
 			if (filena[0] == 'i'):
-				tmp = np.argsort(lr.coef_);
+				for z in range(3):
+					tmp = np.argsort(lr.coef_[z]);
+					tmp = list(reversed(tmp));
+					featurelist.append(range(10));
+					for i in range(10):
+						featurelist[z][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+			elif (filena[0] == 'd'):
+				tmp = np.argsort(lr.coef_[0]);
 				featurelist.append(range(10));
 				for i in range(10):
 					featurelist[0][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
@@ -227,7 +233,7 @@ def ramdom_sampling_bagofword(filena):
 		    return i + 1
 
 
-		random.seed(j+30)
+		random.seed(j+47)
 		holdoutnum = 20;
 
 		fp = open(filena);
@@ -251,7 +257,7 @@ def ramdom_sampling_bagofword(filena):
 
 		random.shuffle(shufflelist);
 
-		bigram_vectorizer = CountVectorizer(ngram_range=(1,3), token_pattern=r'\b\w+\b', min_df=1);
+		bigram_vectorizer = CountVectorizer(ngram_range=(1,3), token_pattern=r'\b[a-zA-Z]\w+\b[-]*\w*\b\b', min_df=1);
 
 
 		truechar = '';
@@ -319,10 +325,29 @@ def ramdom_sampling_bagofword(filena):
 
 
 		if j==0:
-			tmp = np.argsort(lr.coef_);
-			tmp = list(reversed(tmp));
-			for i in range(10):
-				featurelist.append(bigram_vectorizer.get_feature_names()[i]);
+			# tmp = np.argsort(lr.coef_);
+			# tmp = list(reversed(tmp));
+			# for i in range(10):
+			# 	featurelist.append(bigram_vectorizer.get_feature_names()[i]);
+			if (filena[0] == 'i'):
+				print(lr.coef_);
+				for z in range(3):
+					tmp = np.argsort(lr.coef_[z]);
+					tmp = list(reversed(tmp));
+					featurelist.append(range(10));
+					for i in range(10):
+						featurelist[z][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+			elif (filena[0] == 'd'):
+				tmp = np.argsort(lr.coef_[0]);
+				featurelist.append(range(10));
+				for i in range(10):
+					featurelist[0][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+				tmp = list(reversed(tmp));
+				featurelist.append(range(10));
+				for i in range(10):
+					featurelist[1][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+
+
 
 	for i in range(9):
 		ylabel[i] /= float(ava);
@@ -333,46 +358,82 @@ def ramdom_sampling_bagofword(filena):
 	# plt.xlim(0, 1)
 	# plt.show();
 	return (xlabel, ylabel, mlist, featurelist );
-(x1, y1, m1, f1) = ramdom_sampling_bagofword("ice_train.txt")
-(x2, y2, m2, f2) = ramdom_sampling_bagofword("drinking_train.txt")
-
 (x3, y3, m3, f3) = uncertainty_sampling_bagofword("ice_train.txt")
 (x4, y4, m4, f4) = uncertainty_sampling_bagofword("drinking_train.txt")
 
 
+(x1, y1, m1, f1) = ramdom_sampling_bagofword("ice_train.txt")
+(x2, y2, m2, f2) = ramdom_sampling_bagofword("drinking_train.txt")
+
 
 plt.clf()
 
-plt.plot(x1, y1, '-o', label = 'ice_ramdom');
-plt.plot(x2, y2, '-o', label = 'drinking_ramdom');
 plt.plot(x3, y3, '-o', label = 'ice_uncertainty');
 plt.plot(x4, y4, '-o', label = 'drinking_uncertainty');
+plt.plot(x1, y1, '-o', label = 'ice_ramdom');
+plt.plot(x2, y2, '-o', label = 'drinking_ramdom');
 
-print("random sampling M (feature number) for ice_train.txt:");
+
+
+def printlist(li):
+	st = "";
+	for i in range(10):
+		st+="\"";
+		st+=str(li[i]);
+		st+="\" ";
+	print(st);
+	print(" ");
+
+print("random sampling M (feature number) for ice_train.txt in different size:");
 print(m1);
-print("random sampling most weighted feature for ice_train.txt:");
-print(f1);
+print("Top 10 feature in class Methamphetamine in random sampling:")
+printlist(f1[0])
+
+print("Top 10 feature in class Ice in random sampling:")
+printlist(f1[1])
+
+
+print("Top 10 feature in class Caspase-1 in random sampling:")
+printlist(f1[2])
+print(" ");
 
 
 print("random sampling M (feature number) for drinking_train.txt:");
 print(m2);
-print("random sampling most weighted feature for drinking_train.txt:");
-print(f2);
+print("Top 10 feature in class Alcohol in random sampling:")
+printlist(f2[0])
 
 
+print("Top 10 feature in class Drinking in random sampling:")
+printlist(f2[1])
+
+
+
+print(" ");
 print("uncertainty sampling M (feature number) for ice_train.txt:");
 print(m3);
-print("uncertainty sampling most weighted feature for ice_train.txt:");
-print(f3);
+print("Top 10 feature in class Methamphetamine in uncertainty sampling:")
+printlist(f3[0])
+
+print("Top 10 feature in class Ice in uncertainty sampling:")
+printlist(f3[1])
 
 
+print("Top 10 feature in class Caspase-1 in uncertainty sampling:")
+printlist(f3[2])
+
+print(" ");
 print("uncertainty sampling M (feature number) for drinking_train.txt:");
 print(m4);
-print("uncertainty sampling most weighted feature for drinking_train.txt:");
-print(f4);
+print("Top 10 feature in class Alcohol in uncertainty sampling:")
+printlist(f4[0])
 
 
+print("Top 10 feature in class Drinking in uncertainty sampling:")
+printlist(f4[1])
 
+
+print(" ");
 plt.legend(bbox_to_anchor=(0.9, 0.5));
 plt.show();
 
