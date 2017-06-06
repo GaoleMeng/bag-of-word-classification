@@ -1,4 +1,7 @@
 from sklearn.feature_extraction.text import CountVectorizer
+import sys, time
+
+
 from sklearn import linear_model, datasets
 from math import *
 import numpy as np;
@@ -10,6 +13,24 @@ import os
 warnings.filterwarnings("ignore")
 
 
+class ProgressBar:
+    def __init__(self, count = 0, total = 0, width = 50):
+        self.count = count
+        self.total = total
+        self.width = width
+    def move(self):
+        self.count += 1
+    def log(self, s):
+        sys.stdout.write(' ' * (self.width + 9) + '\r')
+        sys.stdout.flush()
+        print s
+        progress = self.width * self.count / self.total
+        sys.stdout.write('{0:3}/{1:3}: '.format(self.count, self.total))
+        sys.stdout.write('#' * progress + '-' * (self.width - progress) + '\r')
+        if progress == self.width:
+            sys.stdout.write('\n')
+        sys.stdout.flush()
+
 def uncertainty_sampling_bagofword(filena):
 
 	xlabel = [];
@@ -19,8 +40,12 @@ def uncertainty_sampling_bagofword(filena):
 	for i in range(9):
 		ylabel[i] = 0.0;
 
-	ana = 100;
-	for t in range(100):
+	ana = 20;
+
+	bar = ProgressBar(total = 20)
+	for t in range(20):
+		bar.move();
+		bar.log("uncertainty iteration: "+str(t))
 		def file_len(fname):
 		    with open(fname) as f:
 		        for i, l in enumerate(f):
@@ -29,7 +54,7 @@ def uncertainty_sampling_bagofword(filena):
 
 
 		random.seed(t+1);
-		holdoutnum = 60;
+		holdoutnum = 20;
 		filelen = file_len(filena) - holdoutnum;
 
 		shufflelist = range(filelen);
@@ -54,13 +79,13 @@ def uncertainty_sampling_bagofword(filena):
 						y.append(1);
 					elif (vec[2][0] == 'C'):
 						y.append(2);
-					corpus.append(vec[2]);
+					corpus.append(vec[3]);
 				if vec[0] == "drinking":
 					if (vec[2][0] == 'D'):
 						y.append(1);
 					elif (vec[2][0] == 'A'):
 						y.append(0);
-					corpus.append(vec[2]);
+					corpus.append(vec[3]);
 
 			else:
 				vec = line.split("\t")
@@ -71,19 +96,28 @@ def uncertainty_sampling_bagofword(filena):
 						accuracyy.append(1);
 					elif (vec[2][0] == 'C'):
 						accuracyy.append(2);
-					accuracycorpus.append(vec[2]);
+					accuracycorpus.append(vec[3]);
 				if vec[0] == "drinking":
 					if (vec[2][0] == 'D'):
 						accuracyy.append(1);
 					elif (vec[2][0] == 'A'):
 						accuracyy.append(0);
-					accuracycorpus.append(vec[2]);
+					accuracycorpus.append(vec[3]);
 
 		corpus_train = [];
 		y_train = [];
+		delist = [];
+
+		
+
 		for i in range(filelen / 10):
 			corpus_train.append(corpus[shufflelist[i]]);
 			y_train.append(y[shufflelist[i]]);
+
+
+
+
+
 
 		findone = False;
 		findzero = False;
@@ -98,8 +132,13 @@ def uncertainty_sampling_bagofword(filena):
 			continue;
 
 		for i in range(filelen/10):
+			delist.append(shufflelist[i]);
+		delist.sort();
+
+		for i in range(filelen/10):
 			corpus.remove(corpus_train[i]);
-			y.remove(y_train[i]);
+			# y.remove(y_train[i]);
+			del y[delist[filelen/10-i-1]];
 
 
 
@@ -125,9 +164,16 @@ def uncertainty_sampling_bagofword(filena):
 				corpus_train.append(corpus[sortlist[i]]);
 				y_train.append(y[sortlist[i]]);
 
+			tmplist = [];
+			for i in range(filelen / 10):
+				tmplist.append(sortlist[i]);
+
+			tmplist.sort();
+
 			for i in range(filelen / 10):
 				corpus.remove(corpus_train[len(corpus_train)-i-1]);
-				y.remove(y_train[len(y_train)-i-1]);
+				# y.remove(y_train[len(y_train)-i-1]);
+				del y[tmplist[filelen/10 - i - 1]];
 
 			
 	for i in range(len(ylabel)):
@@ -151,9 +197,12 @@ def ramdom_sampling_bagofword(filena):
 	for i in range(9):
 		ylabel[i] = 0.0;
 
-	ava = 100;
+	ava = 20;
+	bar = ProgressBar(total = 20)
 
-	for j in range(100):
+	for j in range(20):
+		bar.move();
+		bar.log("uncertainty iteration: "+str(j))
 		def file_len(fname):
 		    with open(fname) as f:
 		        for i, l in enumerate(f):
@@ -162,7 +211,7 @@ def ramdom_sampling_bagofword(filena):
 
 
 		random.seed(j+30)
-		holdoutnum = 60;
+		holdoutnum = 20;
 
 		fp = open(filena);
 
@@ -201,13 +250,13 @@ def ramdom_sampling_bagofword(filena):
 					y.append(1);
 				elif (vec[2][0] == 'C'):
 					y.append(2);
-				corpus.append(vec[2]);
+				corpus.append(vec[3]);
 			if vec[0] == "drinking":
 				if (vec[2][0] == 'D'):
 					y.append(1);
 				elif (vec[2][0] == 'A'):
 					y.append(0);
-				corpus.append(vec[2]);
+				corpus.append(vec[3]);
 
 		for i in range(filelen):
 			realy[i] = y[shufflelist[i]];
@@ -243,22 +292,22 @@ def ramdom_sampling_bagofword(filena):
 			lr.fit(X, y1)
 			X = bigram_vectorizer.transform(testcorpus).toarray();
 			ylabel[i]+=float(lr.score(X, testy));
-			print(str(int((i+1)*(float(filelen)/10.0))) + " "+str(ylabel[i]) + " "+str(len(X[0])))
+			#print(str(int((i+1)*(float(filelen)/10.0))) + " "+str(ylabel[i]) + " "+str(len(X[0])))
 
 	for i in range(9):
 		ylabel[i] /= float(ava);
-		print(ylabel[i])
+		#print(ylabel[i])
 
 	# plt.plot(xlabel, ylabel, '-o');
 
 	# plt.xlim(0, 1)
 	# plt.show();
 	return (xlabel, ylabel);
-
-(x1,y1) = ramdom_sampling_bagofword("ice_train.txt")
-(x2, y2) = ramdom_sampling_bagofword("drinking_train.txt")
 (x3, y3) = uncertainty_sampling_bagofword("ice_train.txt")
 (x4, y4) = uncertainty_sampling_bagofword("drinking_train.txt")
+(x1,y1) = ramdom_sampling_bagofword("ice_train.txt")
+(x2, y2) = ramdom_sampling_bagofword("drinking_train.txt")
+
 
 
 plt.clf()
@@ -268,7 +317,7 @@ plt.plot(x2, y2, '-o', label = 'drinking_ramdom');
 plt.plot(x3, y3, '-o', label = 'ice_uncertainty');
 plt.plot(x4, y4, '-o', label = 'drinking_uncertainty');
 
-plt.ylim(0.8, 1.01);
+plt.ylim(0.5, 1.01);
 
 plt.legend(bbox_to_anchor=(0.9, 0.5));
 plt.show();
