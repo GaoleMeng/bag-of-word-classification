@@ -174,10 +174,23 @@ def uncertainty_sampling_bagofword(filena):
 				del y[tmplist[filelen/10 - i - 1]];
 
 		if t==0:
-			tmp = np.argsort(lr.coef_);
-			tmp = list(reversed(tmp));
-			for i in range(10):
-				featurelist.append(bigram_vectorizer.get_feature_names()[i]);
+			# tmp = np.argsort(lr.coef_);
+			# tmp = list(reversed(tmp));
+			# for i in range(10):
+			# 	featurelist.append(bigram_vectorizer.get_feature_names()[i]);
+
+			if (filena[0] == 'i'):
+				tmp = np.argsort(lr.coef_);
+				featurelist.append(range(10));
+				for i in range(10):
+					featurelist[0][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+				tmp = list(reversed(tmp));
+				featurelist.append(range(10));
+				for i in range(10):
+					featurelist[1][i] = bigram_vectorizer.get_feature_names()[tmp[i]];
+
+
+
 
 	for i in range(len(ylabel)):
 		ylabel[i] /= float(ana);
@@ -186,7 +199,7 @@ def uncertainty_sampling_bagofword(filena):
 
 	# plt.xlim(0, 1)
 	# plt.show();
-	return (xlabel, ylabel, mlist, featurelist );
+	return (xlabel, ylabel, mlist, featurelist);
 
 
 
