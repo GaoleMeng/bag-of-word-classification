@@ -49,7 +49,7 @@ def uncertainty_sampling_bagofword(filena, mode = 0):
 	bar = ProgressBar(total = 20)
 	for t in range(20):
 		bar.move();
-		bar.log("uncertainty iteration: "+str(t))
+		bar.log("Uncertainty iteration: "+str(t))
 		def file_len(fname):
 		    with open(fname) as f:
 		        for i, l in enumerate(f):
